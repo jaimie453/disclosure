@@ -45,9 +45,9 @@ class disclosureEventHandler {
     /* close if focus leaves disclosure or trigger button */
     handleFocusOutside = (event) => {
         const isFocusedElementInsideDisclosure = this.disclosure.contains(event.relatedTarget);
-        const isButtonFocused = event.relatedTarget === this.button;
+        const isTriggerFocused = event.relatedTarget === this.trigger;
 
-        if (!isFocusedElementInsideDisclosure && !isButtonFocused) this.removeEventListeners();
+        if (!isFocusedElementInsideDisclosure && !isTriggerFocused) this.removeEventListeners();
     }
 
     // /*  Escape
@@ -99,7 +99,7 @@ class disclosureEventHandler {
     removeEventListeners = () => {
         this.isListening = false;
         document.removeEventListener('click', this.handleClickOutside);
-        //wrapper.removeEventListener('focusout', onFocusOut);
+        wrapper.removeEventListener('focusout', this.handleFocusOutside);
         //document.removeEventListener('keydown', onKeyDown);
 
         this.onClose();
@@ -127,7 +127,6 @@ class disclosureEventHandler {
     }
 
     validateWrapper = () => {
-        console.log(this.wrapper instanceof HTMLElement);
         if (!(this.wrapper instanceof HTMLElement)) throw new Error("wrapper must be an HTMLElement");
         if (!this.wrapper.contains(this.disclosure) || !this.wrapper.contains(this.trigger)) {
             throw new Error("wrapper must contain trigger and disclosure");
