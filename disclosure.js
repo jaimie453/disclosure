@@ -6,21 +6,31 @@
         select:not([disabled]),
         textarea:not([disabled]),
         button:not([disabled]),
+        details,
         iframe,
         [tabindex],
         [contentEditable=true]
 */
 
 {
-    const validElements = ["a", "area", "input", "select", "textarea", "button", "iframe"];
+    const focusableElements = ["a", "area", "input", "select", "textarea", "button", "iframe", "details"];
 
-    function isElementFocusable(element) {
-        return (validElements.includes(element.tagName.toLowerCase())
+    function isFocusableElement(element) {
+        return (focusableElements.includes(element.tagName.toLowerCase())
             || element.hasAttribute("tabindex")
             || element.contentEditable === 'true')
             && !element.hasAttribute('disabled');
     }
+
+    const typableElements = ["input", "select", "textarea"];
+
+    function isTypeableElement(element) {
+        return typableElements.includes(element.tagName.toLowerCase())
+            || element.contentEditable === 'true';
+    }
 }
+
+
 
 
 // https://www.w3.org/WAI/ARIA/apg/patterns/disclosure/
@@ -31,7 +41,9 @@ class disclosureEventHandler {
     onClose;
 
     navigableItems;
+    navigableItemsIndex = -1;
 
+    preventFocusEvent = false;  // prevent focus event from firing after calling .focus()
     isListening = false;
 
     constructor(disclosure, trigger, wrapper, onClose, navigableItems = []) {
@@ -51,20 +63,27 @@ class disclosureEventHandler {
         this.validateNavigableItems();
     }
 
+    set newNavigableItems(navigableItems) {
+        this.navigableItemsIndex = -1;
+        this.navigableItems = navigableItems;
+        this.validateNavigableItems();
+    }
+
     handleClickOutside = (event) => {
         const isClickInsideDisclosure = this.disclosure.contains(event.target);
         if (!isClickInsideDisclosure) this.removeEventListeners();
     }
 
-    /* close if focus leaves disclosure or trigger button */
+    //  close if focus leaves disclosure or trigger button
+    //  Otherwise, update navigableItemsIndex to stay consistent with arrow key navigation
     handleFocusOutside = (event) => {
-        if(!event.relatedTarget) return;
-        
-        const isFocusInsideDisclosure = this.disclosure.contains(event.relatedTarget) 
-                                        || event.relatedTarget === this.trigger;
+        if (!event.relatedTarget || this.preventFocusEvent) return;
+
+        const isFocusInsideDisclosure = this.disclosure.contains(event.relatedTarget)
+            || event.relatedTarget === this.trigger;
 
         if (!isFocusInsideDisclosure) this.removeEventListeners();
-        else console.log("focus is inside disclosure");// need to check for navigableItems focus so index stays consistent
+        else if (navigableItems) this.navigableItemsIndex = Array.from(navigableItems).indexOf(event.relatedTarget);
     }
 
     /*  Escape
@@ -73,38 +92,58 @@ class disclosureEventHandler {
             allows for restricted navigation (cannot leave disclosure) between disclosure items
     */
     handleKeyInput = (event) => {
+        // doesn't allow closing with Esc while typing, not sure if this matters
+        if (isTypeableElement(document.activeElement)) return;
+
+        // Until this function ends, do not fire handleFocusOutside from calling .focus()
+        this.preventFocusEvent = true;
+        
         if (event.key === 'Escape') {
             this.removeEventListeners();
             this.trigger.focus();
         }
 
-        if (false) {
+        if (this.navigableItems) {
             switch (event.key) {
-                case 'ArrowUp' || 'ArrowLeft':
+                case 'ArrowUp': case 'ArrowLeft':
                     event.preventDefault();
 
-                    if (buttonIndex > 0) {
-                        --buttonIndex
+                    if (this.navigableItemsIndex > 0) {
+                        --this.navigableItemsIndex
                     } else {
-                        buttonIndex = disclosureButtons.length - 1
+                        this.navigableItemsIndex = this.navigableItems.length - 1;
                     }
 
-                    disclosureButtons[buttonIndex].focus();
+                    this.navigableItems[this.navigableItemsIndex].focus();
                     break;
 
-                case 'ArrowDown' || 'ArrowRight':
+                case 'ArrowDown': case 'ArrowRight':
                     event.preventDefault();
 
-                    if (buttonIndex < disclosureButtons.length - 1) {
-                        ++buttonIndex
+                    if (this.navigableItemsIndex < this.navigableItems.length - 1) {
+                        ++this.navigableItemsIndex;
                     } else {
-                        buttonIndex = 0;
+                        this.navigableItemsIndex = 0;
                     }
 
-                    disclosureButtons[buttonIndex].focus();
+                    this.navigableItems[this.navigableItemsIndex].focus();
+                    break;
+
+                case 'Home':
+                    this.navigableItemsIndex = 0;
+                    this.navigableItems[this.navigableItemsIndex].focus();
+
+                    break;
+
+                case 'End':
+                    this.navigableItemsIndex = this.navigableItems.length - 1;
+                    this.navigableItems[this.navigableItemsIndex].focus();
+
                     break;
             }
         }
+
+        this.preventFocusEvent = false;
     }
 
     toggleEventListeners = () => {
@@ -116,10 +155,12 @@ class disclosureEventHandler {
         if (!this.isListening) return;
 
         document.removeEventListener('click', this.handleClickOutside);
-        wrapper.removeEventListener('focusout', this.handleFocusOutside);
         document.removeEventListener('keydown', this.handleKeyInput);
+        wrapper.removeEventListener('focusout', this.handleFocusOutside);
 
         this.isListening = false;
+        this.navigableItemsIndex = -1;
+
         this.onClose();
     }
 
@@ -127,10 +168,10 @@ class disclosureEventHandler {
         if (this.isListening) return;
 
         /* needed otherwise the button will instantly close on click */
-        setTimeout(() => {  
+        setTimeout(() => {
             document.addEventListener('click', this.handleClickOutside);
+            document.addEventListener("keydown", this.handleKeyInput);
             wrapper.addEventListener('focusout', this.handleFocusOutside);
-            document.addEventListener("keydown", this.handleKeyInput);   
         }, 50);
 
         this.isListening = true;
@@ -172,12 +213,14 @@ class disclosureEventHandler {
 
     validateNavigableItems = () => {
         if (!this.navigableItems) throw new Error("navigableItems is null");
-        if (!(this.navigableItems instanceof HTMLCollection)) throw new Error("navigableItems must be an HTMLCollection");
+        if (!(this.navigableItems instanceof HTMLCollection) && !(this.navigableItems instanceof NodeList)) {
+            throw new Error("navigableItems must be an HTMLCollection or NodeList");
+        }
 
         let showButtonLinkWarning = true;
         Array.from(navigableItems).forEach(navigableItem => {
             if (!this.disclosure.contains(navigableItem)) throw new Error("navigableItems must be inside disclosure");
-            if (!isElementFocusable(navigableItem)) throw new Error("navigableItems contains non focusable elements");
+            if (!isFocusableElement(navigableItem)) throw new Error("navigableItems contains non focusable elements");
 
             if (showButtonLinkWarning && (navigableItem.tagName !== 'BUTTON' && navigableItem.tagName !== 'A')) {
                 console.warn("disclosureEventHandler: navigableItems should only contain buttons and/or links");
@@ -218,4 +261,10 @@ const toggle = () => {
 const closeDisclosure = () => {
     hideDisclosure();
     disclosureHandler.removeEventListeners();
+};
+
+const updateNavigableItems = () => {
+    const newItems = document.querySelectorAll("button.focus-test");
+    
+    disclosureHandler.newNavigableItems = newItems;
 };
