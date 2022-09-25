@@ -20,17 +20,52 @@
             z-index: 1;
             background-color: white;
         }
+
+        .focus-test {
+            display: block;
+            width: 100%;
+            text-align: center;
+        }
     </style>
 </head>
 
 <body>
     <button style="margin-bottom: 16px;">Before disclosure</button>
     <div id="wrapper">
-        <button id="trigger" onclick="toggle();" aria-expanded="false" aria-controls="disclosure">Show disclosure</button>
+        <button id="trigger" onclick="toggle();" aria-expanded="false" aria-controls="disclosure">Show
+            disclosure</button>
         <div id="disclosure" style="display: none;">
+            <input type="search" />
             This disclosure should be able to be closed with Esc, tab outside, and click outside
-            <button>disclosure action</button>
-            <button onclick="closeDisclosure();">close disclosure</button>
+            <br><br>
+            <button class="focus-test">disclosure action</button>
+            <a href="#" class="focus-test" style="display: block;">test</a>
+            <button class="focus-test">disclosure action</button>
+            <button class="focus-test">disclosure action</button>
+            <a href="#" class="focus-test" style="display: block;">test</a>
+            <button class="focus-test">disclosure action</button>
+            <button class="focus-test">disclosure action</button>
+            <a href="#" class="focus-test" style="display: block;">test</a>
+            <button class="focus-test" onclick="closeDisclosure();">close disclosure</button>
+            <!--
+            <area href="#" class="focus-test">
+            <input class="focus-test">
+            <select class="focus-test">
+                <option>1</option>
+            </select>
+            <textarea class="focus-test">test</textarea>
+            <button class="focus-test">test</button>
+            <div class="focus-test" tabindex="0" style="width: 20px; height: 20px; border: 1px solid red;"></div>
+            <iframe class="focus-test"></iframe>
+            <blockquote class="focus-test" contenteditable="true">
+                <p>Edit this content to add your own quote</p>
+            </blockquote>
+            -->
+            <!--
+            <div class="focus-test"></div>
+            <blockquote class="focus-test" contenteditable="false">
+                <p>Edit this content to add your own quote</p>
+            </blockquote>-->
         </div>
     </div>
 
