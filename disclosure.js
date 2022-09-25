@@ -29,7 +29,7 @@ class disclosureEventHandler {
 
         this.trigger = trigger;
         this.validateTrigger();
-        
+
         this.wrapper = wrapper;
         this.validateWrapper();
 
@@ -38,66 +38,61 @@ class disclosureEventHandler {
     }
 
     handleClickOutside = (event) => {
-        console.log(event);
-        console.log(this.disclosure);
         const isClickInsideDisclosure = this.disclosure.contains(event.target);
         if (!isClickInsideDisclosure) this.removeEventListeners();
     }
 
-    // /* close if focus leaves dropdown or right split button */
-    // handleFocusOutside(event) {
-    //     const isFocusedElementInsideDropdown = dropdown.contains(event.relatedTarget);
-    //     const isRightSplitButtonFocused = event.relatedTarget === rightSplitButton;
+    /* close if focus leaves disclosure or trigger button */
+    handleFocusOutside = (event) => {
+        const isFocusedElementInsideDisclosure = this.disclosure.contains(event.relatedTarget);
+        const isButtonFocused = event.relatedTarget === this.button;
 
-    //     if (!isFocusedElementInsideDropdown && !isRightSplitButtonFocused) {
-    //         $actions.CloseDropdown();
-    //         removeEvents();
-    //     }
-    // }
+        if (!isFocusedElementInsideDisclosure && !isButtonFocused) this.removeEventListeners();
+    }
 
     // /*  Escape
     //         closes menu and reverts focus to right split button
     //     Arrow keys
-    //         allows for restricted navigation (cannot leave dropdown) between dropdown items
+    //         allows for restricted navigation (cannot leave disclosure) between disclosure items
     // */
-    // //const dropdownButtons = dropdown.getElementsByTagName('button'); // would need to modify this if links are used
+    // //const disclosureButtons = disclosure.getElementsByTagName('button'); // would need to modify this if links are used
     // handleKeyInput(event) {
     //     switch (event.key) {
     //         case 'Escape':
-    //             $actions.CloseDropdown();
-    //             rightSplitButton.focus();
+    //             $actions.Closedisclosure();
+    //             button.focus();
     //             removeEvents();
     //             break;
     //         /*
     //         case 'ArrowUp':  
     //             event.preventDefault();
-     
+
     //             if(buttonIndex > 0) {
     //                 --buttonIndex
     //             } else {
-    //                 buttonIndex = dropdownButtons.length - 1
+    //                 buttonIndex = disclosureButtons.length - 1
     //             }
-     
-    //             dropdownButtons[buttonIndex].focus();
+
+    //             disclosureButtons[buttonIndex].focus();
     //             break;
-     
+
     //         case 'ArrowDown': 
     //             event.preventDefault();
-     
-    //             if(buttonIndex < dropdownButtons.length - 1) {
+
+    //             if(buttonIndex < disclosureButtons.length - 1) {
     //                 ++buttonIndex 
     //             } else {
     //                 buttonIndex = 0;
     //             }
-            
-    //             dropdownButtons[buttonIndex].focus();
+
+    //             disclosureButtons[buttonIndex].focus();
     //             break;    
     //             */
     //     }
     // }
 
     toggleEventListeners = () => {
-        if(this.isListening) this.removeEventListeners();
+        if (this.isListening) this.removeEventListeners();
         else this.addEventListeners();
     }
 
@@ -111,17 +106,18 @@ class disclosureEventHandler {
     }
 
     addEventListeners = () => {
+        /* needed otherwise the button will instantly close */
         setTimeout(() => {
             this.isListening = true;
             document.addEventListener('click', this.handleClickOutside);
-            //wrapper.addEventListener('focusout', onFocusOut);
+            wrapper.addEventListener('focusout', this.handleFocusOutside);
             //document.addEventListener("keydown", onKeyDown);
         }, 50);
     }
 
     validateDisclosure = () => {
         if (!this.disclosure) throw new Error("disclosure is null");
-        if (!(this.disclosure instanceof HTMLElement)) throw new Error("disclosure must be an HTMLElement"); 
+        if (!(this.disclosure instanceof HTMLElement)) throw new Error("disclosure must be an HTMLElement");
     }
 
     validateTrigger = () => {
@@ -144,26 +140,34 @@ class disclosureEventHandler {
     }
 }
 
+
+
 const trigger = document.getElementById("trigger");
 const disclosure = document.getElementById("disclosure");
 const wrapper = document.getElementById("wrapper");
 
-const close = () => {  
-    disclosure.style.display = 'none';
-    trigger.ariaExpanded = false;
+const showDisclosure = () => {
+    disclosure.style.display = '';
+    trigger.ariaExpanded = true;
 };
 
-const disclosureHandler = new disclosureEventHandler(disclosure, trigger, wrapper, close);
+const hideDisclosure = () => {
+    disclosure.style.display = 'none';
+    trigger.ariaExpanded = false;
+}
 
-const toggle = () => {  
-    if (disclosure.style.display === 'none') {
-        disclosure.style.display = '';
-        trigger.ariaExpanded = true;
-    } else {
-        disclosure.style.display = 'none';
-        trigger.ariaExpanded = false;
-    }
+const disclosureHandler = new disclosureEventHandler(disclosure, trigger, wrapper, onClose = () => {
+    hideDisclosure();
+});
+
+const toggle = () => {
+    if (disclosure.style.display === 'none') showDisclosure();
+    else hideDisclosure();
 
     disclosureHandler.toggleEventListeners();
 };
 
+const closeDisclosure = () => {
+    hideDisclosure();
+    disclosureHandler.removeEventListeners();
+};
