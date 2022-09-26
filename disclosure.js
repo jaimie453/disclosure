@@ -260,6 +260,7 @@ const toggle = () => {
 
 const closeDisclosure = () => {
     hideDisclosure();
+    trigger.focus();
     disclosureHandler.removeEventListeners();
 };
 

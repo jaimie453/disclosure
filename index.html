@@ -52,6 +52,8 @@
             disclosure</button>
         <div id="disclosure" style="display: none;">
             <input type="search" />
+            <!--
+ 
             <select>
                 <option>1</option>
                 <option>test</option>
@@ -62,19 +64,20 @@
             </blockquote>
             <button>Test</button>
             <br>
+             -->
             This disclosure should be able to be closed with Esc, tab outside, and click outside
             <br><br>
-            <div class="navigable-items-wrapper">
-                <button class="focus-test">disclosure action 1</button>
-                <a href="#" class="focus-test" style="display: block;">disclosure link 1</a>
-                <button class="focus-test">disclosure action 2</button>
-                <button class="focus-test">disclosure action 3</button>
-                <a href="#" class="focus-test" style="display: block;">disclosure link 2</a>
-                <button class="focus-test">disclosure action 4</button>
-                <button class="focus-test">disclosure action 5</button>
-                <a href="#" class="focus-test" style="display: block;">disclosure link 3</a>
-                <button class="focus-test" onclick="closeDisclosure();">close disclosure</button>
-            </div>
+            <ul class="navigable-items-wrapper">
+                <li><button class="focus-test">disclosure action 1</button></li>
+                <li><a href="#" class="focus-test" style="display: block;">disclosure link 1</a></li>
+                <li><button class="focus-test">disclosure action 2</button></li>
+                <li><button class="focus-test">disclosure action 3</button></li>
+                <li><a href="#" class="focus-test" style="display: block;">disclosure link 2</a></li>
+                <li><button class="focus-test">disclosure action 4</button></li>
+                <li><button class="focus-test">disclosure action 5</button></li>
+                <li><a href="#" class="focus-test" style="display: block;">disclosure link 3</a></li>
+                <li><button class="focus-test" onclick="closeDisclosure();">close disclosure</button></li>
+            </ul>
             <!--
             <area href="#" class="focus-test">
             <input class="focus-test">
